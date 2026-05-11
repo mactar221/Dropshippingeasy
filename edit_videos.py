@@ -9,10 +9,12 @@ DARK_BROWN = "#654321"
 
 BANNER_HEIGHT_RATIO = 0.15
 TEXT = "MEKA"
+START_TIME = 28
+END_TIME = 30
 
 
 def process_video(input_path: str, output_path: str) -> None:
-    video = VideoFileClip(input_path)
+    video = VideoFileClip(input_path).subclip(START_TIME, END_TIME)
     width, height = video.size
     banner_height = int(height * BANNER_HEIGHT_RATIO)
 
