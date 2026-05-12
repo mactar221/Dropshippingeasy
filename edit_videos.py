@@ -1,13 +1,13 @@
 import os
 from moviepy.editor import VideoFileClip, ColorClip, TextClip, CompositeVideoClip
 
-INPUT_DIR = "input"
-OUTPUT_DIR = "output"
+INPUT_DIR = r"C:\VideoEditor\input"
+OUTPUT_DIR = r"C:\VideoEditor\output"
 
 BEIGE = (245, 245, 220)
 DARK_BROWN = "#654321"
 
-BANNER_HEIGHT_RATIO = 0.15
+BANNER_HEIGHT_RATIO = 0.18
 TEXT = "MEKA"
 START_TIME = 28
 END_TIME = 30
