@@ -1,16 +1,50 @@
 import os
-from moviepy.editor import VideoFileClip, ColorClip, TextClip, CompositeVideoClip
+import numpy as np
+from PIL import Image, ImageDraw, ImageFont
+from moviepy.editor import VideoFileClip, ImageClip, CompositeVideoClip
 
 INPUT_DIR = r"C:\VideoEditor\input"
 OUTPUT_DIR = r"C:\VideoEditor\output"
 
 BEIGE = (245, 245, 220)
-DARK_BROWN = "#654321"
+DARK_BROWN = (101, 67, 33)
 
 BANNER_HEIGHT_RATIO = 0.18
 TEXT = "MEKA"
 START_TIME = 28
 END_TIME = 30
+
+FONT_CANDIDATES = [
+    r"C:\Windows\Fonts\arialbd.ttf",
+    r"C:\Windows\Fonts\arial.ttf",
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+]
+
+
+def load_font(size: int) -> ImageFont.FreeTypeFont:
+    for path in FONT_CANDIDATES:
+        if os.path.isfile(path):
+            return ImageFont.truetype(path, size)
+    return ImageFont.load_default()
+
+
+def build_banner(width: int, height: int) -> np.ndarray:
+    img = Image.new("RGB", (width, height), BEIGE)
+    draw = ImageDraw.Draw(img)
+
+    font_size = int(height * 0.7)
+    font = load_font(font_size)
+
+    bbox = draw.textbbox((0, 0), TEXT, font=font)
+    text_w = bbox[2] - bbox[0]
+    text_h = bbox[3] - bbox[1]
+
+    x = (width - text_w) // 2 - bbox[0]
+    y = (height - text_h) // 2 - bbox[1]
+
+    draw.text((x, y), TEXT, fill=DARK_BROWN, font=font)
+    return np.array(img)
 
 
 def process_video(input_path: str, output_path: str) -> None:
@@ -18,24 +52,14 @@ def process_video(input_path: str, output_path: str) -> None:
     width, height = video.size
     banner_height = int(height * BANNER_HEIGHT_RATIO)
 
-    banner = (
-        ColorClip(size=(width, banner_height), color=BEIGE)
+    banner_array = build_banner(width, banner_height)
+    banner_clip = (
+        ImageClip(banner_array)
         .set_duration(video.duration)
         .set_position((0, 0))
     )
 
-    text = (
-        TextClip(
-            TEXT,
-            fontsize=int(banner_height * 0.7),
-            color=DARK_BROWN,
-            font="DejaVu-Sans-Bold",
-        )
-        .set_duration(video.duration)
-        .set_position(("center", (banner_height - int(banner_height * 0.7)) // 2))
-    )
-
-    final = CompositeVideoClip([video, banner, text])
+    final = CompositeVideoClip([video, banner_clip])
     final.write_videofile(
         output_path,
         codec="libx264",
@@ -45,6 +69,7 @@ def process_video(input_path: str, output_path: str) -> None:
     )
 
     final.close()
+    banner_clip.close()
     video.close()
 
 
